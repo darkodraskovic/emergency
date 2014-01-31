@@ -58,45 +58,6 @@ function handleLoadComplete(event) {
     createjs.Ticker.addEventListener("tick", tick);
 }
 
-function tick(event) {
-    input();
-
-    if (player.rotation > angleDeg - Math.abs(player.av) && player.rotation < angleDeg + Math.abs(player.av)) {
-    	player.av = 0;
-    } else {
-    	player.rotation += player.av;
-	if (player.rotation > 180) {
-	    player.rotation -= 360;
-	} else 	if (player.rotation < -180) {
-	    player.rotation += 360;
-	}	    
-    }
-	
-    var pt = player.globalToLocal(player.targetX, player.targetY);
-    if (player.hitTest(pt.x, pt.y)) {
-	player.vx = player.vy = 0;
-    } else {
-	player.x += player.vx;
-	player.y += player.vy;	
-    }
-
-    if (nanobot.rotation > 360)
-	nanobot.rotation -= 360;
-    nanobot.rotation += nanobot.av;
-
-    if (testRectangle(player, nanobot) != "none") {
-	if (nanobot.clicked) {
-	    player.inv.push(nanobot);
-	    stage.removeChild(nanobot);
-	    nanobot.x = 32 + (player.inv.length - 1) * 32;
-	    nanobot.y = 32;
-	    inventory.addChild(nanobot);
-	    
-	}
-    }
-    
-    stage.update();
-}
 
 function handleInventoryClick(event) {
     if (event.target === nanobot) {
@@ -206,5 +167,45 @@ function initNanobot() {
     nanobot.x = 128;
     nanobot.y = 128;
     nanobot.currentFrame = 0;
+    nanobot.setBounds(-12, -12, 24, 24);
+}
 
+function tick(event) {
+    input();
+
+    if (player.rotation > angleDeg - Math.abs(player.av) && player.rotation < angleDeg + Math.abs(player.av)) {
+    	player.av = 0;
+    } else {
+    	player.rotation += player.av;
+	if (player.rotation > 180) {
+	    player.rotation -= 360;
+	} else 	if (player.rotation < -180) {
+	    player.rotation += 360;
+	}	    
+    }
+	
+    var pt = player.globalToLocal(player.targetX, player.targetY);
+    if (player.hitTest(pt.x, pt.y)) {
+	player.vx = player.vy = 0;
+    } else {
+	player.x += player.vx;
+	player.y += player.vy;	
+    }
+
+    if (nanobot.rotation > 360)
+	nanobot.rotation -= 360;
+    nanobot.rotation += nanobot.av;
+
+    if (testRectangle(player, nanobot) != "none") {
+	if (nanobot.clicked) {
+	    player.inv.push(nanobot);
+	    stage.removeChild(nanobot);
+	    nanobot.x = 32 + (player.inv.length - 1) * 32;
+	    nanobot.y = 32;
+	    inventory.addChild(nanobot);
+	    
+	}
+    }
+    
+    stage.update();
 }
