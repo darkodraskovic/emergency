@@ -1,29 +1,3 @@
-function findSceneryCollisionCandidates(sprite, map) {
-    var collisionCandidates = [];    
-    
-    // var spriteCenterX = Math.floor(sprite.centerX() / map.tileW);
-    // var spriteCenterY = Math.floor(sprite.centerY() / map.tileH);
-    var spriteLeft = Math.floor(sprite.x / map.tileW);
-    var spriteRight = Math.floor((sprite.x + sprite.w) / map.tileW);
-    var spriteTop = Math.floor(sprite.y / map.tileH);
-    var spriteBottom = Math.floor((sprite.y + sprite.h) / map.tileH);
-
-    for (var i = 0; i < map.collisionLayers.length; i++) {
-    	var collisionLayer = map.collisionLayers[i];
-
-    	for (var cols = spriteLeft - 1; cols < spriteRight + 1; cols++) {
-    	    for (var rows = spriteTop - 1; rows < spriteBottom + 1; rows++) {
-    		if (collisionLayer[cols] && collisionLayer[cols][rows])
-		    if (collisionLayer[cols][rows].exists)
-    			collisionCandidates.push(collisionLayer[cols][rows]);
-    	    }
-    	}
-    }
-
-    return collisionCandidates;
-}
-
-
 function testCollisionMask(sprite1, sprite2) {
     if (!(sprite1.colMask & sprite2.colType)) {
 	return false;
@@ -31,7 +5,6 @@ function testCollisionMask(sprite1, sprite2) {
 
 }
 
-// if block = true then add the blocking behavior
 function testRectangle(r1, r2, block, bounce)
 {
 
@@ -43,12 +16,12 @@ function testRectangle(r1, r2, block, bounce)
     var collisionSide = "";
     
     //Calculate the distance vector
-    var vx = r1.centerX() - r2.centerX();
-    var vy = r1.centerY() - r2.centerY();
+    var vx = r1.x - r2.x;
+    var vy = r1.y - r2.y;
     
     //Figure out the combined half-widths and half-heights
-    var combinedHalfWidths = r1.halfWidth() + r2.halfWidth();
-    var combinedHalfHeights = r1.halfHeight() + r2.halfHeight();
+    var combinedHalfWidths = r1.getBounds().width / 2 + r2.getBounds().width / 2;
+    var combinedHalfHeights = r1.getBounds().height / 2 + r2.getBounds().height / 2;
     
     //Check whether vx is less than the combined half-widths 
     if(Math.abs(vx) < combinedHalfWidths) 
@@ -75,7 +48,7 @@ function testRectangle(r1, r2, block, bounce)
 		    collisionSide = "top";
 		    
 		    //Move the rectangle out of the collision
-		    if (block) r1.y = r1.y + overlapY;		    
+		    if (block) r1.y = r1.y + overlapY;
 		}
 		else 
 		{

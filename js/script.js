@@ -1,9 +1,13 @@
 var stage;
+var gameWorld;
 var queue;
 
 var background;
 var interfaceBackground;
+
+var inventory;
 var player;
+var nanobot;
 
 function init() {
     stage = new createjs.Stage("canvas");
@@ -12,6 +16,7 @@ function init() {
     queue.installPlugin(createjs.Sound);
     queue.addEventListener("complete", handleLoadComplete);
     queue.loadManifest([{id: "player_vehicle", src: "assets/player_vehicle.png"},
+			{id: "nanobot", src: "assets/nanobot.png"},
 			{id: "background", src: "assets/background.png"},
 			{id: "interface_background", src: "assets/interface_background.png"}]
 		      );
@@ -20,23 +25,35 @@ function init() {
 function handleLoadComplete(event) {
     console.log("Loaded!");
 
+    gameWorld = new createjs.Container();
     // create gameworld background bitmap
     var img = queue.getResult("background");
     background = new createjs.Bitmap(img);
+    gameWorld.addChild(background);
 
     // create interface background bitmap
     img = queue.getResult("interface_background");
     interfaceBackground = new createjs.Bitmap(img);
-    interfaceBackground.y = 448;
+    interfaceBackground.y = 0;
 
+    // init inventory
+    inventory = new createjs.Container();
+    inventory.y = 448;
+    inventory.addChild(interfaceBackground);
+
+    // init objs
+    initNanobot();
+    gameWorld.addChild(nanobot);
     // initialize player
     initPlayer();
+    gameWorld.addChild(player);
     
-    stage.addChild(background);
-    stage.addChild(player);
-    stage.addChild(interfaceBackground);
+    stage.addChild(gameWorld);
+    stage.addChild(inventory);
+
     
-    background.addEventListener("click", handleClick);
+    gameWorld.addEventListener("click", handleGameWorldClick);
+    inventory.addEventListener("click", handleInventoryClick);
 
     createjs.Ticker.addEventListener("tick", tick);
 }
@@ -63,10 +80,45 @@ function tick(event) {
 	player.y += player.vy;	
     }
 
+    if (nanobot.rotation > 360)
+	nanobot.rotation -= 360;
+    nanobot.rotation += nanobot.av;
+
+    if (testRectangle(player, nanobot) != "none") {
+	if (nanobot.clicked) {
+	    player.inv.push(nanobot);
+	    stage.removeChild(nanobot);
+	    nanobot.x = 32 + (player.inv.length - 1) * 32;
+	    nanobot.y = 32;
+	    inventory.addChild(nanobot);
+	    
+	}
+    }
+    
     stage.update();
 }
 
-function handleClick(event) {
+function handleInventoryClick(event) {
+    if (event.target === nanobot) {
+	var index = player.inv.indexOf(event.target);
+	player.inv.splice(index, 1);
+
+	inventory.removeChild(event.target);
+	event.target.x = player.x;
+	event.target.y = player.y;
+	event.target.clicked = false;
+	gameWorld.addChildAt(event.target, gameWorld.getChildIndex(player));
+    }
+
+}
+
+function handleGameWorldClick(event) {
+    if (event.target === nanobot) {
+	nanobot.clicked = true;
+    } else {
+	nanobot.clicked = false;
+    }
+	
     player.targetX = stage.mouseX;
     player.targetY = stage.mouseY;
     player.vy = Math.sin(angleRad) * player.v;
@@ -90,7 +142,6 @@ function handleClick(event) {
 	}
 	else player.av = -8;	
     }
-
 }
 
 var angleRad;
@@ -125,6 +176,35 @@ function initPlayer() {
     player.targetX = player.x;
     player.targetY = player.y;
     player.currentFrame = 0;
+    player.setBounds(-20,-20, 40, 40);
 
+    player.inv = [];
+}
+
+function initNanobot() {
+    var img = queue.getResult("nanobot");
+    
+    var data = {
+    	images: [img],
+    	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
+    	animations: {
+	    rotate: {
+		frames: [0],
+		next: "rotate",
+		speed: 0.1
+	    }
+	}
+    };
+
+    var spriteSheet = new createjs.SpriteSheet(data);
+
+    nanobot = new createjs.Sprite(spriteSheet);
+    nanobot.gotoAndPlay("rotate");
+    nanobot.name = "nanobot";
+    nanobot.rotation = 0;
+    nanobot.av = 8;
+    nanobot.x = 128;
+    nanobot.y = 128;
+    nanobot.currentFrame = 0;
 
 }
