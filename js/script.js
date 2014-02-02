@@ -49,7 +49,7 @@ function handleLoadComplete(event) {
     // init nanobots
     var i;
     for (i = 0; i < NANOBOTS_NUM; i++) {
-	var nanobot = createNanobot();
+	var nanobot = createObject();
 	nanobots.push(nanobot);
     }
     for (i = 0; i < nanobots.length; i++) {
@@ -76,9 +76,8 @@ function handleLoadComplete(event) {
     createjs.Ticker.addEventListener("tick", tick);
 }
 
-function handleGameWorldClick(event) {
-    player.targetAngleRad = Math.atan2((stage.mouseY - player.y), (stage.mouseX - player.x));
-    
+function handleGameWorldClick(event) {    
+    // set the clicked object
     if (event.target.name === "nanobot") {
 	if (clickedObject !== event.target.parent) {
 	    // if there is already a clicked/highlighted object (that is, if clickObject != null)
@@ -99,7 +98,9 @@ function handleGameWorldClick(event) {
 	}
     }
 
-    // set player movement target coordinates
+    // set the target location angle
+    player.targetAngleRad = Math.atan2((stage.mouseY - player.y), (stage.mouseX - player.x));
+    // set player translation target coordinates
     var clickedGamewolrdPoint = gameWorld.globalToLocal(stage.mouseX, stage.mouseY);
     player.targetLocation.x = clickedGamewolrdPoint.x;
     player.targetLocation.y = clickedGamewolrdPoint.y;
@@ -161,26 +162,31 @@ function createPlayer() {
     player.gotoAndPlay("fly");
 
     // initialize custom variables needed for the game logic
-    player.w = player.getBounds().width;
-    player.h = player.getBounds().height;
     player.v = 4;
     player.vx = 0;
     player.vy = 0;
     player.av = 0;  // angular velocity
     player.inv = [];
 
+
+    // the outer bounds used for the collision detection
+    player.outerBounds = {};
+    player.outerBounds.x = player.x;
+    player.outerBounds.y = player.y;
+    player.outerBounds.w = player.getBounds().width;
+    player.outerBounds.h = player.getBounds().height;
+    // the inner bounds used for the collision detection with the target location and gameworld objects
+    player.innerBounds = {};
+    player.innerBounds.x = player.x;
+    player.innerBounds.y = player.y;
+    player.innerBounds.w = player.v;
+    player.innerBounds.h = player.v;
     // the x and y coordinates of the clicked point in the gameworld
     player.targetLocation = {};
     player.targetLocation.x = player.x;
     player.targetLocation.y = player.y;
     player.targetLocation.w = player.v;
     player.targetLocation.h = player.v;
-    player.innerBounds = {};
-    player.innerBounds.x = player.x;
-    player.innerBounds.y = player.y;
-    player.innerBounds.w = player.v;
-    player.innerBounds.h = player.v;
-
     // the angle between the x axis and the straight line that connects the player position and the clicked point position
     player.targetAngleDeg = 0;
     player.targetAngleRad = 0;
@@ -224,15 +230,13 @@ function createPlayer() {
     };
 
     player.translate = function() {
-	// var pt = this.globalToLocal(this.target.x, this.target.y);
-	// if (this.hitTest(pt.x, pt.y)) {
-	player.innerBounds.x = player.x;
-	player.innerBounds.y = player.y;
 	if (testRectangle(player.innerBounds, player.targetLocation)) {
 	    this.vx = this.vy = 0;
 	} else {
 	    this.x += this.vx;
-	    this.y += this.vy;	
+	    this.y += this.vy;
+	    this.innerBounds.x = this.outerBounds.x = this.x;
+	    this.innerBounds.y = this.outerBounds.y = this.y;
 	}
     };
 
@@ -244,8 +248,9 @@ function createPlayer() {
     return player;
 }
 
-function createNanobot() {
-    var nanobotContainer = new createjs.Container();
+// TODO createObject(img, spritesheet, name) & write comments
+function createObject() {
+    var container = new createjs.Container();
 
     // create a nanobot
     var img = queue.getResult("nanobot");    
@@ -262,16 +267,16 @@ function createNanobot() {
     };
     var spriteSheet = new createjs.SpriteSheet(data);
     
-    var nanobot = new createjs.Sprite(spriteSheet);
+    var sprite = new createjs.Sprite(spriteSheet);
 
-    nanobot.name = "nanobot";
-    nanobot.rotation = 0;
-    nanobot.currentFrame = 0;
-    nanobot.gotoAndPlay("rotate");
+    sprite.name = "nanobot";
+    sprite.rotation = 0;
+    sprite.currentFrame = 0;
+    sprite.gotoAndPlay("rotate");
 
-    nanobot.w = nanobot.getBounds().width;
-    nanobot.h = nanobot.getBounds().height;
-    nanobot.av = 8;
+    sprite.w = sprite.getBounds().width;
+    sprite.h = sprite.getBounds().height;
+    sprite.av = 8;
 
     // create a highlight
     img = queue.getResult("highlight");
@@ -279,31 +284,31 @@ function createNanobot() {
     highlight.visible = false;
     highlight.name = "highlight";
 
-    nanobotContainer.addChild(highlight);
-    nanobotContainer.addChild(nanobot);
-    nanobot.x = nanobotContainer.getBounds().width / 2;
-    nanobot.y = nanobotContainer.getBounds().height / 2;    
+    container.addChild(highlight);
+    container.addChild(sprite);
+    sprite.x = container.getBounds().width / 2;
+    sprite.y = container.getBounds().height / 2;    
 
-    nanobotContainer.regX = nanobotContainer.getBounds().width / 2;
-    nanobotContainer.regY = nanobotContainer.getBounds().height / 2;
+    container.regX = container.getBounds().width / 2;
+    container.regY = container.getBounds().height / 2;
 
-    nanobotContainer.w = nanobotContainer.getBounds().width;
-    nanobotContainer.h = nanobotContainer.getBounds().height;
-    nanobotContainer.x = Math.random() * gameWorld.getBounds().width; 
-    nanobotContainer.y = Math.random() * gameWorld.getBounds().height;
+    container.w = container.getBounds().width;
+    container.h = container.getBounds().height;
+    container.x = Math.random() * gameWorld.getBounds().width; 
+    container.y = Math.random() * gameWorld.getBounds().height;
 
-    nanobot.rotate = function() {
+    sprite.rotate = function() {
 	if (this.rotation > 360)
 	    this.rotation -= 360;
-	this.rotation += nanobot.av;
+	this.rotation += sprite.av;
 
     };
 
-    nanobot.update = function() {
+    sprite.update = function() {
 	this.rotate();
     };
     
-    return nanobotContainer;
+    return container;
 }
 
 function tick(event) {
