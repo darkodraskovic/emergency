@@ -5,6 +5,12 @@ function testCollisionMask(sprite1, sprite2) {
 
 }
 
+var NONE = 0;
+var TOP = 1;
+var BOTTOM = 2;
+var LEFT = 3;
+var RIGHT = 4;
+
 function testRectangle(r1, r2, block, bounce)
 {
 
@@ -13,15 +19,15 @@ function testRectangle(r1, r2, block, bounce)
 
     
     //A variable to tell us which side the collision is occurring on
-    var collisionSide = "";
+    var collisionSide = NONE;
     
     //Calculate the distance vector
     var vx = r1.x - r2.x;
     var vy = r1.y - r2.y;
     
     //Figure out the combined half-widths and half-heights
-    var combinedHalfWidths = r1.getBounds().width / 2 + r2.getBounds().width / 2;
-    var combinedHalfHeights = r1.getBounds().height / 2 + r2.getBounds().height / 2;
+    var combinedHalfWidths = r1.w / 2 + r2.w / 2;
+    var combinedHalfHeights = r1.h / 2 + r2.h / 2;
     
     //Check whether vx is less than the combined half-widths 
     if(Math.abs(vx) < combinedHalfWidths) 
@@ -38,21 +44,21 @@ function testRectangle(r1, r2, block, bounce)
 	    //The collision has occurred on the axis with the
 	    //*smallest* amount of overlap. Let's figure out which
 	    //axis that is
-            
+
 	    if(overlapX >= overlapY)
 	    {
 		//The collision is happening on the X axis 
 		//But on which side? vy can tell us
 		if(vy > 0)
 		{
-		    collisionSide = "top";
+		    collisionSide = TOP;
 		    
 		    //Move the rectangle out of the collision
 		    if (block) r1.y = r1.y + overlapY;
 		}
 		else 
 		{
-		    collisionSide = "bottom";
+		    collisionSide = BOTTOM;
 		    
 		    //Move the rectangle out of the collision
 		    if (block) r1.y = r1.y - overlapY;
@@ -67,14 +73,14 @@ function testRectangle(r1, r2, block, bounce)
 		//But on which side? vx can tell us
 		if(vx > 0)
 		{
-		    collisionSide = "left";
+		    collisionSide = LEFT;
 		    
 		    //Move the rectangle out of the collision
 		    if (block) r1.x = r1.x + overlapX;
 		}
 		else 
 		{
-		    collisionSide = "right";
+		    collisionSide = RIGHT;
 		    
 		    //Move the rectangle out of the collision
 		    if (block) r1.x = r1.x - overlapX;
@@ -87,13 +93,13 @@ function testRectangle(r1, r2, block, bounce)
 	else 
 	{
 	    //No collision
-	    collisionSide = "none";
+	    collisionSide = NONE;
 	}
     } 
     else 
     {
 	//No collision
-	collisionSide = "none";
+	collisionSide = NONE;
     }
     
     return collisionSide;
