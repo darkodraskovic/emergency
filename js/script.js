@@ -20,14 +20,24 @@ function init() {
     queue.loadManifest([{id: "player_vehicle", src: "assets/player_vehicle.png"},
 			{id: "nanobot", src: "assets/nanobot.png"},
 			{id: "background", src: "assets/background.png"},
+			{id: "star", src: "assets/star.png"},
 			{id: "interface_background", src: "assets/interface_background.png"},
 			{id: "highlight", src: "assets/highlight.png"}]
 		      );
 }
 
 function handleLoadComplete(event) {
-    console.log("Loaded!");
+    // INIT INVENTORY
+    // create container for the interface background bitmap
+    inventory = new createjs.Container();
+    inventory.y = 448;
 
+    // create the interface background bitmap
+    img = queue.getResult("interface_background");
+    interfaceBackground = new createjs.Bitmap(img);
+    inventory.addChild(interfaceBackground);
+
+    // INIT GAMEWORLD & GAME OBJECTS
     // create the gameworld; 
     gameWorld = new createjs.Container();
     // create the gameworld background bitmap
@@ -35,31 +45,31 @@ function handleLoadComplete(event) {
     background = new createjs.Bitmap(img);
     gameWorld.addChild(background);
 
-
-    // create the inventory
-    // create container for the interface background bitmap
-    inventory = new createjs.Container();
-    inventory.y = 448;
-    // create the interface background bitmap
-    img = queue.getResult("interface_background");
-    interfaceBackground = new createjs.Bitmap(img);
-    inventory.addChild(interfaceBackground);
-
-    // init game objects
     // init nanobots
+    var nanobotImg = queue.getResult("nanobot");    
+    var nanobotData = {
+    	images: [nanobotImg],
+    	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
+    	animations: {
+    	    rotate: {
+    		frames: [0],
+    		next: "rotate",
+    		speed: 0.1
+    	    }
+    	}
+    };
+
     var i;
     for (i = 0; i < NANOBOTS_NUM; i++) {
-	var nanobot = createObject();
+	var nanobot = new Rotor("nanobot", nanobotData, queue.getResult("highlight"), Math.ceil(Math.random() * 12) + 4);
 	nanobots.push(nanobot);
     }
     for (i = 0; i < nanobots.length; i++) {
 	gameWorld.addChild(nanobots[i]);
+	nanobots[i].x = Math.random() * gameWorld.getBounds().width;
+	nanobots[i].y = Math.random() * gameWorld.getBounds().height; 
     }
-    
-    // create item highlight
-    img = queue.getResult("highlights");
-    
-    
+        
     // initialize player
     player = createPlayer();
     gameWorld.addChild(player);
@@ -68,10 +78,12 @@ function handleLoadComplete(event) {
     stage.addChild(gameWorld);
     stage.addChild(inventory);
 
+    // HANDLE EVENTS
     // handle click events
     gameWorld.addEventListener("click", handleGameWorldClick);
     inventory.addEventListener("click", handleInventoryClick);
 
+    // GAMELOOP
     // create game loop
     createjs.Ticker.addEventListener("tick", tick);
 }
@@ -248,69 +260,7 @@ function createPlayer() {
     return player;
 }
 
-// TODO createObject(img, spritesheet, name) & write comments
-function createObject() {
-    var container = new createjs.Container();
-
-    // create a nanobot
-    var img = queue.getResult("nanobot");    
-    var data = {
-    	images: [img],
-    	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
-    	animations: {
-	    rotate: {
-		frames: [0],
-		next: "rotate",
-		speed: 0.1
-	    }
-	}
-    };
-    var spriteSheet = new createjs.SpriteSheet(data);
-    
-    var sprite = new createjs.Sprite(spriteSheet);
-
-    sprite.name = "nanobot";
-    sprite.rotation = 0;
-    sprite.currentFrame = 0;
-    sprite.gotoAndPlay("rotate");
-
-    sprite.w = sprite.getBounds().width;
-    sprite.h = sprite.getBounds().height;
-    sprite.av = 8;
-
-    // create a highlight
-    img = queue.getResult("highlight");
-    var highlight = new createjs.Bitmap(img);
-    highlight.visible = false;
-    highlight.name = "highlight";
-
-    container.addChild(highlight);
-    container.addChild(sprite);
-    sprite.x = container.getBounds().width / 2;
-    sprite.y = container.getBounds().height / 2;    
-
-    container.regX = container.getBounds().width / 2;
-    container.regY = container.getBounds().height / 2;
-
-    container.w = container.getBounds().width;
-    container.h = container.getBounds().height;
-    container.x = Math.random() * gameWorld.getBounds().width; 
-    container.y = Math.random() * gameWorld.getBounds().height;
-
-    sprite.rotate = function() {
-	if (this.rotation > 360)
-	    this.rotation -= 360;
-	this.rotation += sprite.av;
-
-    };
-
-    sprite.update = function() {
-	this.rotate();
-    };
-    
-    return container;
-}
-
+/* GAME LOOP */
 function tick(event) {
     player.update();
 
@@ -334,8 +284,7 @@ function tick(event) {
 		}
 	    }
 	}
-    }
-    
+    }    
     stage.update();
 }
 
