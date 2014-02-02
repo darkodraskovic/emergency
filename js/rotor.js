@@ -34,11 +34,6 @@
 	    this.rotation += this.rv;
 	};
 
-	sprite.update = function() {
-	    this.rotate();
-	};
-
-
 	highlight = new createjs.Bitmap(highlightImage);
 	highlight.visible = false;
 	highlight.name = "highlight";
@@ -54,8 +49,14 @@
 	this.w = this.getBounds().width;
 	this.h = this.getBounds().height;
 
+	this.on("tick", this.tick);
+
+	
     };
 
+    p.tick = function() {
+	this.getChildAt(1).rotate();
+    };
 
     window.Rotor = Rotor;
 

@@ -267,7 +267,6 @@ function tick(event) {
     var i;
     for (i = 0; i < nanobots.length; i++) {
 	var nanobot = nanobots[i];
-	nanobot.getChildByName("nanobot").update();
 
 	// test for a collision only if the item is clicked
 	if (nanobot.clicked) {
