@@ -16,10 +16,10 @@
 
     p.initialize = function(name, data, highlightImage, rotationVelocity) {
 	this.Container_initialize();
-
+	this.name = name || "rotor";
+	
 	var spriteSheet = new createjs.SpriteSheet(data);
 	sprite = new createjs.Sprite(spriteSheet);
-	sprite.name = name || "rotor";
 	sprite.rotation = 0;
 	sprite.currentFrame = 0;
 	sprite.gotoAndPlay("rotate");
@@ -27,6 +27,7 @@
 	sprite.w = sprite.getBounds().width;
 	sprite.h = sprite.getBounds().height;
 	sprite.rv = rotationVelocity; // rotational velocity
+	sprite.name = this.name + "Sprite";
 
 	sprite.rotate = function() {
 	    if (this.rotation > 360)
@@ -36,7 +37,7 @@
 
 	highlight = new createjs.Bitmap(highlightImage);
 	highlight.visible = false;
-	highlight.name = "highlight";
+	highlight.name = this.name + "Highlight";
 
 	this.addChild(highlight);
 	this.addChild(sprite);
@@ -48,9 +49,12 @@
 
 	this.w = this.getBounds().width;
 	this.h = this.getBounds().height;
-
+	
+	var hit = new createjs.Shape();
+	hit.graphics.beginFill("#000").drawRect(0, 0, this.w, this.h);
+	this.hitArea = hit;
+	
 	this.on("tick", this.tick);
-
 	
     };
 
