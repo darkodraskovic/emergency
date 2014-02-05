@@ -1,11 +1,15 @@
+var CELL_W = 64;
+var CELL_H = 64;
+
 var stage;
-var gameWorld;
 var queue;
 
 var background;
 var interfaceBackground;
 var clickedObject = null;
 
+var gameWorld;
+var map;
 var inventory;
 var player;
 var nanobots = [];
@@ -45,6 +49,12 @@ function handleLoadComplete(event) {
     background = new createjs.Bitmap(img);
     gameWorld.addChild(background);
 
+    // init map
+    map = new K.WorldMap(gameWorld.getBounds().height / CELL_H, gameWorld.getBounds().width / CELL_W,
+    		       CELL_W, CELL_H);
+
+    gameWorld.addChild(map);
+    
     // init nanobots
     var nanobotImg = queue.getResult("nanobot");    
     var nanobotData = {
@@ -61,7 +71,7 @@ function handleLoadComplete(event) {
 
     var i;
     for (i = 0; i < NANOBOTS_NUM; i++) {
-	var nanobot = new Rotor("nanobot", nanobotData, queue.getResult("highlight"), Math.ceil(Math.random() * 12) + 4);
+	var nanobot = new K.Rotor("nanobot", nanobotData, queue.getResult("highlight"), Math.ceil(Math.random() * 12) + 4);
 	nanobots.push(nanobot);
     }
     for (i = 0; i < nanobots.length; i++) {
@@ -91,22 +101,22 @@ function handleLoadComplete(event) {
 function handleGameWorldClick(event) {    
     // CLICKED OBJECT AND ITS HIGHLIGHT
     var target = event.target;
-    if (target.name === "nanobot") {
+    if (target instanceof K.Rotor) {
 	if (clickedObject !== target) {
 	    // if there is already a clicked/highlighted object (that is, if clickObject != null)
 	    if (clickedObject) {
 		clickedObject.clicked = false;
-		clickedObject.getChildByName(clickedObject.name + "Highlight").visible = false;
+		clickedObject.getChildByName("highlight").visible = false;
 	    }	
 	    target.clicked = true;
-	    target.getChildByName(target.name + "Highlight").visible = true;
+	    target.getChildByName("highlight").visible = true;
 	    clickedObject = target;
 	}
     } else {
 	// if the player has clicked somewhere on the gameworld but not on the clickable object
 	if (clickedObject) {
 	    clickedObject.clicked = false;
-	    clickedObject.getChildByName(clickedObject.name + "Highlight").visible = false;
+	    clickedObject.getChildByName("highlight").visible = false;
 	    clickedObject = null;
 	}
     }
@@ -278,7 +288,7 @@ function tick(event) {
 		    nanobot.y = inventory.getBounds().height / 2;
 		    inventory.addChild(nanobot);
 		    nanobot.clicked = false;
-		    nanobot.getChildByName(nanobot.name + "Highlight").visible = false;
+		    nanobot.getChildByName("highlight").visible = false;
 		    clickedObject = null;
 		}
 	    }
