@@ -31,11 +31,6 @@ var K = {};
 		cell.hitArea = hit;
 
 		this.addChild(cell);
-
-		cell.on("click", function() {
-		    console.log(this.toString()); 
-		});
-		
 	    }
 	}
     };
@@ -70,20 +65,56 @@ var K = {};
 
 
 (function(){
-    var Population = function() {
-	this.initialize();
+    var Population = function(name, data, qty) {
+	this.initialize(name, data, qty);
     };
 
     var p = Population.prototype = new createjs.Container();
 
     p.Container_initialize = p.initialize;
 
-    p.initialize = function() {
+    p.initialize = function(name, data, qty) {
 	this.Container_initialize();
+	this.name = name;
+
+	// add the sprite to the container
+	var spriteSheet = new createjs.SpriteSheet(data);
+	var sprite = new createjs.Sprite(spriteSheet);
+	sprite.x = data.frames.width / 2;
+	sprite.y = data.frames.height / 2;
+	sprite.currentFrame = 0;
+	sprite.gotoAndPlay("default");
+
+	this.addChild(sprite);
+	// shape used for the collision detection with the container 
+	var hit = new createjs.Shape();
+	hit.graphics.beginFill("#000").drawRect(0, 0, data.frames.width, data.frames.height);
+	this.hitArea = hit;
+	// transform the center into origin
+	this.w = data.frames.width;
+	this.h = data.frames.height;
+	this.regX = this.w / 2;
+	this.regY = this.h / 2;
 	
+	this.qty = qty;
+
+	// set later when all the species are defined
+	// predator and prey refere to classes
+	this.predator = null;
+	this.prey = null;
+	// this.qty -= this.predator.aggr * this.predator.qty * (event.delta / resistance);
+	// if resistance === 1000, the population will be lessened by this.predator.aggr * this.predator.qty
+	this.resistance = 0;
+	this.aggr = 0;
+
     };
 
+    p.survive = function(predator, delta) {
+	this.qty -= predator.aggr * predator.qty * (delta / this.resistance);
+    };
+    
     K.Population = Population;
+    
 }());
 
 
