@@ -15,7 +15,7 @@ var map;
 var inventory;
 var player;
 var populations = [];
-var POPULATIONS_NUM = 5;
+var POPS_PER_SPEC = 5;
 var nanobots = [];
 var NANOBOTS_NUM = 5;
 
@@ -32,7 +32,8 @@ function init() {
 			{id: "star", src: "assets/star.png"},
 			{id: "interface_background", src: "assets/interface_background.png"},
 			{id: "highlight", src: "assets/highlight.png"},
-			{id: "frog", src: "assets/frog.png"}]
+			{id: "frog", src: "assets/frog.png"},
+			{id: "fly", src: "assets/fly.png"}]
 		      );
 }
 
@@ -91,7 +92,7 @@ function handleLoadComplete(event) {
     var frogImg = queue.getResult("frog");    
     var frogData = {
     	images: [frogImg],
-    	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
+    	frames: {width: 32, height: 32, regX: 16, regY: 16},
     	animations: {
     	    default: {
     		frames: [0],
@@ -100,16 +101,37 @@ function handleLoadComplete(event) {
     	    }
     	}
     };
-    for (var i = 0; i < POPULATIONS_NUM; i++) {
+
+    var flyImg = queue.getResult("fly");
+    var flyData = {
+	images: [flyImg],
+	frames: {width: 32, height: 32, regX: 16, regY: 16},
+    	animations: {
+    	    default: {
+    		frames: [0],
+    		next: "default",
+    		speed: 0.1
+    	    }
+    	}
+    };
+    
+    
+    for (var i = 0; i < POPS_PER_SPEC; i++) {
 	var frog = new K.Population("frog", frogData, 100);
     	populations.push(frog);
 	gameWorld.addChild(frog);
+
+	var fly = new K.Population("fly", flyData, 100);
+	populations.push(fly);
+	gameWorld.addChild(fly);
     }
     for (i = 0; i < populations.length; i++) {
     	populations[i].x = Math.random() * gameWorld.getBounds().width;
     	populations[i].y = Math.random() * gameWorld.getBounds().height; 
     }
+    
 
+    // initialize highlight effect (when item clicked)
     highlight = new createjs.Bitmap(queue.getResult("highlight"));
     highlight.x = highlight.regX  = COLLECTIBLE_SIZE / 2;
     highlight.y = highlight.regY = COLLECTIBLE_SIZE / 2;
@@ -159,12 +181,12 @@ function handleGameWorldClick(event) {
     }
 
     // SET PLAYER MOVEMENT'S PARAMETERS
-    // set the target location angle
-    player.targetAngleRad = Math.atan2((stage.mouseY - player.y), (stage.mouseX - player.x));
-    // set player translation target coordinates
     var clickedGamewolrdPoint = gameWorld.globalToLocal(stage.mouseX, stage.mouseY);
+    // set player translation target coordinates
     player.targetLocation.x = clickedGamewolrdPoint.x;
     player.targetLocation.y = clickedGamewolrdPoint.y;
+    // set the target location angle    
+    player.targetAngleRad = Math.atan2((player.targetLocation.y - player.y), (player.targetLocation.x - player.x));
     //  calculate the vx and vy component of the speed
     player.setTranslationVelocity();
     // and set the rotation speed and direction
@@ -215,8 +237,8 @@ function createPlayer() {
 
     // initialize easeljs library sprite object variables
     player.name = "player";
-    player.x = stage.canvas.width / 2 - 32;
-    player.y = stage.canvas.height / 2 -32;
+    player.x = stage.canvas.width / 2 - player.getBounds().width / 2;
+    player.y = stage.canvas.height / 2 - player.getBounds().height / 2;
     player.rotation = 0;
     player.currentFrame = 0;
     player.gotoAndPlay("fly");
@@ -228,25 +250,29 @@ function createPlayer() {
     player.av = 0;  // angular velocity
     player.inv = [];
 
-
     // the outer bounds used for the collision detection
     player.outerBounds = {};
     player.outerBounds.x = player.x;
     player.outerBounds.y = player.y;
     player.outerBounds.w = player.getBounds().width;
     player.outerBounds.h = player.getBounds().height;
+
     // the inner bounds used for the collision detection with the target location and gameworld objects
     player.innerBounds = {};
     player.innerBounds.x = player.x;
     player.innerBounds.y = player.y;
+    // the minimal value of w and h is the maximal value of the velocity
+    // otherwise, we would run the risk to "skip" the collision detection target
     player.innerBounds.w = player.v;
     player.innerBounds.h = player.v;
+
     // the x and y coordinates of the clicked point in the gameworld
     player.targetLocation = {};
     player.targetLocation.x = player.x;
     player.targetLocation.y = player.y;
     player.targetLocation.w = player.v;
     player.targetLocation.h = player.v;
+
     // the angle between the x axis and the straight line that connects the player position and the clicked point position
     player.targetAngleDeg = 0;
     player.targetAngleRad = 0;
