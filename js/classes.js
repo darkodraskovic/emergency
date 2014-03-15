@@ -18,6 +18,8 @@ var K = {};
 	    for (var j = 0; j < this.cols; j++) {
 		var cell = new createjs.Container();
 		cell.name = "x:" + j + ",y:" + i;
+		cell.w = cellW;
+		cell.h = cellH;
 		// the map matrix position of the cell
 		cell.col = j;
 		cell.row = i;
@@ -26,9 +28,9 @@ var K = {};
 		cell.y = cell.row * cellH;
 
 		// shape used for the collision detection with the container (for testing purposes only)
-		var hit = new createjs.Shape();
-		hit.graphics.beginFill("#000").drawRect(0, 0, cellW, cellH);
-		cell.hitArea = hit;
+		// var hit = new createjs.Shape();
+		// hit.graphics.beginFill("#000").drawRect(0, 0, cellW, cellH);
+		// cell.hitArea = hit;
 
 		this.addChild(cell);
 	    }
@@ -65,15 +67,15 @@ var K = {};
 
 
 (function(){
-    var Population = function(name, data, qty) {
-	this.initialize(name, data, qty);
+    var Population = function(name, data, qty, predator, prey) {
+	this.initialize(name, data, qty, predator, prey);
     };
 
     var p = Population.prototype = new createjs.Container();
 
     p.Container_initialize = p.initialize;
 
-    p.initialize = function(name, data, qty) {
+    p.initialize = function(name, data, qty, predator, prey) {
 	this.Container_initialize();
 	this.name = name;
 
@@ -93,15 +95,16 @@ var K = {};
 	// transform the center into origin
 	this.w = data.frames.width;
 	this.h = data.frames.height;
-	this.regX = this.w / 2;
-	this.regY = this.h / 2;
+	this.regX = data.frames.regX;
+	this.regY = data.frames.regY;
 	
-	this.qty = qty;
+	this.qty = qty || 100;
 
 	// set later when all the species are defined
 	// predator and prey refere to classes
-	this.predator = null;
-	this.prey = null;
+	this.predator = predator || null;
+	this.prey = prey || null;
+	this.neighbor = null;
 	// this.qty -= this.predator.aggr * this.predator.qty * (event.delta / resistance);
 	// if resistance === 1000, the population will be lessened by this.predator.aggr * this.predator.qty
 	this.resistance = 0;

@@ -1,24 +1,15 @@
-var CELL_W = 64;
-var CELL_H = 64;
-var COLLECTIBLE_SIZE = 32;
-
 var stage;
+var gameWorld;
 var queue;
 
 var background;
 var interfaceBackground;
 var clickedObject = null;
-var highlight;
 
-var gameworld;
-var map;
 var inventory;
 var player;
-var populations = [];
-var POPS_PER_SPEC = 5;
 var nanobots = [];
 var NANOBOTS_NUM = 5;
-
 
 function init() {
     stage = new createjs.Stage("canvas");
@@ -31,9 +22,7 @@ function init() {
 			{id: "background", src: "assets/background.png"},
 			{id: "star", src: "assets/star.png"},
 			{id: "interface_background", src: "assets/interface_background.png"},
-			{id: "highlight", src: "assets/highlight.png"},
-			{id: "frog", src: "assets/frog.png"},
-			{id: "fly", src: "assets/fly.png"}]
+			{id: "highlight", src: "assets/highlight.png"}]
 		      );
 }
 
@@ -50,122 +39,48 @@ function handleLoadComplete(event) {
 
     // INIT GAMEWORLD & GAME OBJECTS
     // create the gameworld; 
-    gameworld = new createjs.Container();
+    gameWorld = new createjs.Container();
     // create the gameworld background bitmap
     var img = queue.getResult("background");
     background = new createjs.Bitmap(img);
-    background.name = "background";
-    gameworld.addChild(background);
+    gameWorld.addChild(background);
 
-    // init map
-    map = new K.WorldMap(gameworld.getBounds().height / CELL_H, gameworld.getBounds().width / CELL_W,
-    		       CELL_W, CELL_H);
-
-    gameworld.addChild(map);
-    
     // init nanobots
-    // var nanobotImg = queue.getResult("nanobot");    
-    // var nanobotData = {
-    // 	images: [nanobotImg],
-    // 	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
-    // 	animations: {
-    // 	    rotate: {
-    // 		frames: [0],
-    // 		next: "rotate",
-    // 		speed: 0.1
-    // 	    }
-    // 	}
-    // };
-
-    // var i;
-    // for (i = 0; i < NANOBOTS_NUM; i++) {
-    // 	var nanobot = new K.Rotor("nanobot", nanobotData, queue.getResult("highlight"), Math.ceil(Math.random() * 12) + 4);
-    // 	nanobots.push(nanobot);
-    // }
-    // for (i = 0; i < nanobots.length; i++) {
-    // 	gameworld.addChild(nanobots[i]);
-    // 	nanobots[i].x = Math.random() * gameworld.getBounds().width;
-    // 	nanobots[i].y = Math.random() * gameworld.getBounds().height; 
-    // }
-
-    
-    var frogImg = queue.getResult("frog");    
-    var frogData = {
-    	images: [frogImg],
-    	frames: {width: 32, height: 32, regX: 16, regY: 16},
+    var nanobotImg = queue.getResult("nanobot");    
+    var nanobotData = {
+    	images: [nanobotImg],
+    	frames: {width: 32, height: 32, count: 10, regX: 16, regY: 16},
     	animations: {
-    	    default: {
+    	    rotate: {
     		frames: [0],
-    		next: "default",
+    		next: "rotate",
     		speed: 0.1
     	    }
     	}
     };
 
-    var flyImg = queue.getResult("fly");
-    var flyData = {
-	images: [flyImg],
-	frames: {width: 32, height: 32, regX: 16, regY: 16},
-    	animations: {
-    	    default: {
-    		frames: [0],
-    		next: "default",
-    		speed: 0.1
-    	    }
-    	}
-    };
-    
-    
-    for (var i = 0; i < POPS_PER_SPEC; i++) {
-	var frog = new K.Population("frog", frogData, 100, null, "fly");
-    	populations.push(frog);
-
-	var fly = new K.Population("fly", flyData, 100, "frog", null);
-	populations.push(fly);
+    var i;
+    for (i = 0; i < NANOBOTS_NUM; i++) {
+	var nanobot = new Rotor("nanobot", nanobotData, queue.getResult("highlight"), Math.ceil(Math.random() * 12) + 4);
+	nanobots.push(nanobot);
     }
-    for (i = 0; i < populations.length; i += 2) {
-	var p1 = populations[i];
-	var p2 = populations[i+1];
-	
-	p1.col = p2.col = Math.floor(Math.random() * map.cols); 
-	p1.row = p2.row = Math.floor(Math.random() * map.rows);
-
-	// set x and y of neighbor populations
-	// position them next to each other in the lower half of the cell	
-	var cell = map.getChildAt(map.cols * p1.row + p1.col);
-	p1.x = p1.w / 2;
-	p2.x = p1.x + p1.w;
-	p1.y = cell.h / 2 + p1.h / 2;
-	p2.y = p1.y;
-
-	cell.addChild(p1);
-	cell.addChild(p2);
-
-	// inform each population of its neighbor
-	p1.neighbor = p2;
-	p2.neighbor = p1;
-
-	// inform the map cell of its occupants
-	
+    for (i = 0; i < nanobots.length; i++) {
+	gameWorld.addChild(nanobots[i]);
+	nanobots[i].x = Math.random() * gameWorld.getBounds().width;
+	nanobots[i].y = Math.random() * gameWorld.getBounds().height; 
     }
-    
-
-    // initialize highlight effect (when item clicked)
-    highlight = new createjs.Bitmap(queue.getResult("highlight"));
-    highlight.x = highlight.regX  = COLLECTIBLE_SIZE / 2;
-    highlight.y = highlight.regY = COLLECTIBLE_SIZE / 2;
-    
+        
     // initialize player
     player = createPlayer();
-    gameworld.addChild(player);
+    gameWorld.addChild(player);
 
     // add the gameworld and inventory container to the stage
-    stage.addChild(gameworld);
+    stage.addChild(gameWorld);
     stage.addChild(inventory);
 
     // HANDLE EVENTS
     // handle click events
-    gameworld.addEventListener("click", handleGameworldClick);
+    gameWorld.addEventListener("click", handleGameWorldClick);
     inventory.addEventListener("click", handleInventoryClick);
 
     // GAMELOOP
@@ -173,46 +88,34 @@ function handleLoadComplete(event) {
     createjs.Ticker.addEventListener("tick", tick);
 }
 
-function handleGameworldClick(event) {    
-    var target = event.target;
-    // console.log(event.target.name);
-
-    // CLICKED OBJECT AND ITS HIGHLIGHT
-    if (target instanceof K.Population) {
-	if (clickedObject !== target) {
+function handleGameWorldClick(event) {    
+    // set the clicked object
+    if (event.target.name === "nanobot") {
+	if (clickedObject !== event.target.parent) {
 	    // if there is already a clicked/highlighted object (that is, if clickObject != null)
 	    if (clickedObject) {
 		clickedObject.clicked = false;
-		// highlight is allways in the background, ie, having an index == 0
-		clickedObject.removeChildAt(0);
+		clickedObject.getChildByName("highlight").visible = false;
 	    }	
-	    target.clicked = true;
-	    clickedObject = target;
-	    clickedObject.addChildAt(highlight, 0);	    
-	    console.log(clickedObject.name);
-	    console.log(clickedObject.parent.name + ": " + clickedObject.parent.x + " " + clickedObject.parent.y);
-	    console.log("before transform: " + clickedObject.x + " " + clickedObject.y);
-	    clickedObject.gameworldCoords = clickedObject.localToLocal(clickedObject.x, clickedObject.y, gameworld);
-	    clickedObject.gameworldCoords.w = clickedObject.w;
-	    clickedObject.gameworldCoords.h = clickedObject.h;
-	    console.log("after transform: " + clickedObject.gameworldCoords.x + " " + clickedObject.gameworldCoords.y);
+	    event.target.parent.clicked = true;
+	    event.target.parent.getChildByName("highlight").visible = true;
+	    clickedObject = event.target.parent;
 	}
     } else {
 	// if the player has clicked somewhere on the gameworld but not on the clickable object
 	if (clickedObject) {
 	    clickedObject.clicked = false;
-	    clickedObject.removeChildAt(0);
+	    clickedObject.getChildByName("highlight").visible = false;
 	    clickedObject = null;
 	}
     }
 
-    // SET PLAYER MOVEMENT'S PARAMETERS
-    var clickedGamewolrdPoint = gameworld.globalToLocal(stage.mouseX, stage.mouseY);
+    // set the target location angle
+    player.targetAngleRad = Math.atan2((stage.mouseY - player.y), (stage.mouseX - player.x));
     // set player translation target coordinates
+    var clickedGamewolrdPoint = gameWorld.globalToLocal(stage.mouseX, stage.mouseY);
     player.targetLocation.x = clickedGamewolrdPoint.x;
     player.targetLocation.y = clickedGamewolrdPoint.y;
-    // set the target location angle    
-    player.targetAngleRad = Math.atan2((player.targetLocation.y - player.y), (player.targetLocation.x - player.x));
     //  calculate the vx and vy component of the speed
     player.setTranslationVelocity();
     // and set the rotation speed and direction
@@ -220,25 +123,26 @@ function handleGameworldClick(event) {
 }
 
 function handleInventoryClick(event) {    
-    var target = event.target;
-    if (target instanceof K.Population) {
-	// remove the clicked item from the player inventory array
-	var index = player.inv.indexOf(target);
+    if (event.target.name === "nanobot") {
+	// get the container of the clicked item
+	var parent = event.target.parent;
+	// remove the clicked item'container from the player inventory array
+	var index = player.inv.indexOf(parent);
 	player.inv.splice(index, 1);
 
-	// remove the item from the inventory 
-	inventory.removeChild(target);
-	// reposition items in inventory to account for the space generated by the item's removal
+	// remove the parent subcontainer from the inventory supercontainer
+	inventory.removeChild(event.target);
+	// reposition items in inventory to account for the space generated by the item's' removal
 	for (var i = 0; i < player.inv.length; i++) {
 	    player.inv[i].x = 32 + i * player.inv[i].w;
 	}
 
 	// position the clicked item in the gameworld
-	target.x = player.x;
-	target.y = player.y;
+	parent.x = player.x;
+	parent.y = player.y;
 
 	// add the removed item just below the player object in the gameworld
-	gameworld.addChildAt(target, gameworld.getChildIndex(player));
+	gameWorld.addChildAt(parent, gameWorld.getChildIndex(player));
     }
 
 }
@@ -263,8 +167,8 @@ function createPlayer() {
 
     // initialize easeljs library sprite object variables
     player.name = "player";
-    player.x = stage.canvas.width / 2 - player.getBounds().width / 2;
-    player.y = stage.canvas.height / 2 - player.getBounds().height / 2;
+    player.x = stage.canvas.width / 2 - 32;
+    player.y = stage.canvas.height / 2 -32;
     player.rotation = 0;
     player.currentFrame = 0;
     player.gotoAndPlay("fly");
@@ -276,29 +180,25 @@ function createPlayer() {
     player.av = 0;  // angular velocity
     player.inv = [];
 
+
     // the outer bounds used for the collision detection
     player.outerBounds = {};
     player.outerBounds.x = player.x;
     player.outerBounds.y = player.y;
     player.outerBounds.w = player.getBounds().width;
     player.outerBounds.h = player.getBounds().height;
-
     // the inner bounds used for the collision detection with the target location and gameworld objects
     player.innerBounds = {};
     player.innerBounds.x = player.x;
     player.innerBounds.y = player.y;
-    // the minimal value of w and h is the maximal value of the velocity
-    // otherwise, we would run the risk to "skip" the collision detection target
     player.innerBounds.w = player.v;
     player.innerBounds.h = player.v;
-
     // the x and y coordinates of the clicked point in the gameworld
     player.targetLocation = {};
     player.targetLocation.x = player.x;
     player.targetLocation.y = player.y;
     player.targetLocation.w = player.v;
     player.targetLocation.h = player.v;
-
     // the angle between the x axis and the straight line that connects the player position and the clicked point position
     player.targetAngleDeg = 0;
     player.targetAngleRad = 0;
@@ -364,22 +264,25 @@ function createPlayer() {
 function tick(event) {
     player.update();
 
-    // test for a collision only if the item is clicked
-    if (clickedObject) {
-	// console.log("player: " + player.x + "; clicked: " + clickedObject.gameworldCoords.x);
-	// console.log("player: " + player.y + "; clicked: " + clickedObject.gameworldCoords.y);
-	if (testRectangle(player.innerBounds, clickedObject.gameworldCoords) != NONE) {
-	    player.inv.push(clickedObject);
-	    // gameworld.removeChild(clickedObject);
-	    clickedObject.parent.removeChild(clickedObject);
-	    clickedObject.x = 32 + (player.inv.length - 1) * clickedObject.w;
-	    clickedObject.y = inventory.getBounds().height / 2;
-	    inventory.addChild(clickedObject);
-	    clickedObject.clicked = false;
-	    clickedObject.removeChildAt(0);
-	    clickedObject = null;
-	}
+    var i;
+    for (i = 0; i < nanobots.length; i++) {
+	var nanobot = nanobots[i];
 
+	// test for a collision only if the item is clicked
+	if (nanobot.clicked) {
+	    if (testRectangle(player.innerBounds, nanobot) != NONE) {
+		if (nanobot.clicked) {
+		    player.inv.push(nanobot);
+		    gameWorld.removeChild(nanobot);
+		    nanobot.x = 32 + (player.inv.length - 1) * nanobot.w;
+		    nanobot.y = inventory.getBounds().height / 2;
+		    inventory.addChild(nanobot);
+		    nanobot.clicked = false;
+		    nanobot.getChildByName("highlight").visible = false;
+		    clickedObject = null;
+		}
+	    }
+	}
     }    
     stage.update();
 }
