@@ -24,6 +24,8 @@ var K = {};
 		cell.col = j;
 		cell.row = i;
 		// the pixel position of the cell (in the map)
+		// cell.regX = cell.w / 2;
+		// cell.regY = cell.h / 2;
 		cell.x = cell.col * cellW;
 		cell.y = cell.row * cellH;
 

@@ -135,7 +135,7 @@ function handleLoadComplete(event) {
 	var cell = map.getChildAt(map.cols * p1.row + p1.col);
 	p1.x = p1.w / 2;
 	p2.x = p1.x + p1.w;
-	p1.y = cell.h / 2 + p1.h / 2;
+	p1.y = p1.h / 2;
 	p2.y = p1.y;
 
 	cell.addChild(p1);
@@ -196,6 +196,10 @@ function handleGameworldClick(event) {
 	    clickedObject.gameworldCoords.w = clickedObject.w;
 	    clickedObject.gameworldCoords.h = clickedObject.h;
 	    console.log("after transform: " + clickedObject.gameworldCoords.x + " " + clickedObject.gameworldCoords.y);
+
+	    // HACK; createjs does not transform local to local properly 
+	    if (clickedObject.x > CELL_W / 2)
+		clickedObject.gameworldCoords.x -= CELL_W / 2;
 	}
     } else {
 	// if the player has clicked somewhere on the gameworld but not on the clickable object
@@ -222,6 +226,13 @@ function handleGameworldClick(event) {
 function handleInventoryClick(event) {    
     var target = event.target;
     if (target instanceof K.Population) {
+	// position the clicked item in the gameworld
+	target.x = player.x;
+	target.y = player.y;
+	var cellX = Math.floor(player.x / CELL_W);
+	var cellY = Math.floor(player.y / CELL_W);
+	var cell = map.getChildByName("x:" + cellX + ",y:" + cellY);
+
 	// remove the clicked item from the player inventory array
 	var index = player.inv.indexOf(target);
 	player.inv.splice(index, 1);
@@ -233,12 +244,19 @@ function handleInventoryClick(event) {
 	    player.inv[i].x = 32 + i * player.inv[i].w;
 	}
 
-	// position the clicked item in the gameworld
-	target.x = player.x;
-	target.y = player.y;
-
+	// console.log(cell.name); 
+	
 	// add the removed item just below the player object in the gameworld
-	gameworld.addChildAt(target, gameworld.getChildIndex(player));
+	// gameworld.addChildAt(target, gameworld.getChildIndex(player));
+	if (cell.getNumChildren < 1) {
+	    target.x = target.w / 2;
+	    target.y = target.h / 2;	    
+	}
+	else {
+	    target.x = target.w + target.w / 2;
+	    target.y = target.h / 2;	    	    
+	}
+	cell.addChild(target);	
     }
 
 }
